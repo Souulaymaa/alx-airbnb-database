@@ -17,7 +17,7 @@ We checked for transitive dependencies:
 
 ## Final Adjusted Schema
 
-![Normalized Diagram](ERD/images/er-normalized.png)
+![Normalized Diagram](images/er-normalized.png)
 
 ## Conclusion
 After removing the derived field `total_price` from `Booking`, the database design satisfies 3NF. This ensures minimal redundancy, prevents update anomalies, and maintains data integrity.
