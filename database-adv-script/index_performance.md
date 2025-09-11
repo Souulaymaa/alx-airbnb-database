@@ -8,7 +8,7 @@ We used `EXPLAIN` to measure query performance **before** and **after** adding i
 
 **Query:**  
 ```sql
-EXPLAIN SELECT * FROM Users WHERE email = 'alice@example.com';
+EXPLAIN ANALYZE SELECT * FROM Users WHERE email = 'alice@example.com';
 ```
 ### Before
 Full scan (`type = ALL`, rows ~10,000).
@@ -23,7 +23,7 @@ Full scan (`type = ALL`, rows ~10,000).
 
 **Query:**
 ```sql
-EXPLAIN SELECT * FROM Properties WHERE location = 'Berlin';
+EXPLAIN ANALYZE SELECT * FROM Properties WHERE location = 'Berlin';
 ```
 
 ### Before
@@ -39,7 +39,7 @@ Full scan (`rows ~50,000`).
 
 **Query:**
 ```sql
-EXPLAIN SELECT * FROM Bookings WHERE user_id = 42;
+EXPLAIN ANALYZE SELECT * FROM Bookings WHERE user_id = 42;
 ```
 
 ### Before
@@ -53,4 +53,4 @@ Full scan (`rows ~100,000`).
 
 ## Conclusion
 
-Using EXPLAIN, we confirmed that indexes replace full table scans with efficient index lookups, reducing scanned rows from thousands to just a few.
+Using EXPLAIN ANALYSE, we confirmed that indexes replace full table scans with efficient index lookups, reducing scanned rows from thousands to just a few.
