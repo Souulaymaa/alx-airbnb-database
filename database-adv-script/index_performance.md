@@ -14,7 +14,7 @@ EXPLAIN SELECT * FROM Users WHERE email = 'alice@example.com';
 Full scan (`type = ALL`, rows ~10,000).
 
 ### After
-`idx_users_email`: Index lookup (`type = ref`, rows = 1).
+`index_email`: Index lookup (`type = ref`, rows = 1).
 
 ✅ Login queries became much faster.
 
@@ -30,7 +30,7 @@ EXPLAIN SELECT * FROM Properties WHERE location = 'Berlin';
 Full scan (`rows ~50,000`).
 
 ### After
-`idx_properties_location`: Index lookup (`rows ~120`).
+`index_location`: Index lookup (`rows ~120`).
 
 ✅ Location searches improved.
 
@@ -46,7 +46,7 @@ EXPLAIN SELECT * FROM Bookings WHERE user_id = 42;
 Full scan (`rows ~100,000`).
 
 ### After
-`idx_bookings_user_id`: Index lookup (`rows ~15`).
+`index_userid`: Index lookup (`rows ~15`).
 
 ✅ User booking history loads quickly.
 
