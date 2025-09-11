@@ -6,6 +6,8 @@ GROUP BY b.user_id;
 -- Use a window function (ROW_NUMBER, RANK) to rank properties based on the total number of bookings they have received.
 SELECT p.property_id, p.name, COUNT(b.booking_id)
     RANK() OVER (ORDER BY COUNT(b.booking_id) DESC)
+    ROW_NUMBER() OVER (ORDER BY COUNT(b.booking_id) DESC) AS rownum_booking
 FROM Properties p
 LEFT JOIN bookings b ON p.property_id = b.property_id
 GROUP BY p.property_id, p.name;
+
