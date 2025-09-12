@@ -1,79 +1,82 @@
-# Database Performance Monitoring & Optimization  
+# Performance Monitoring Report
 
-## Objective  
-Continuously monitor and refine database performance by analyzing query execution plans and making schema adjustments.  
+## Objective
+Continuously monitor and refine database performance by analyzing query execution plans and making schema adjustments.
 
-## Step 1: Monitor Query Performance  
+## Step 1: Monitoring Queries
 
-### MySQL  
+We used `EXPLAIN ANALYZE` to measure execution plans of frequently used queries.
+
+### Example Query: Retrieve bookings with user and property details
 ```sql
--- Enable profiling
-SET profiling = 1;
-
--- Example query
-SELECT * FROM orders WHERE customer_id = 123;
-
--- Show executed queries
-SHOW PROFILES;
-
--- Detailed profile for the last query
-SHOW PROFILE FOR QUERY 1;
+EXPLAIN ANALYZE
+SELECT 
+    b.booking_id,
+    b.start_date,
+    b.end_date,
+    u.first_name,
+    u.last_name,
+    p.name AS property_name,
+    p.location
+FROM Bookings b
+JOIN Users u ON b.user_id = u.user_id
+JOIN Properties p ON b.property_id = p.property_id
+WHERE b.start_date BETWEEN '2025-09-01' AND '2025-09-30';
 ```
 
-### PostgreSQL  
+### Observations
+- Full table scans on `Bookings`.  
+- Nested loops caused slow performance for large datasets.  
+- No effective use of indexes.
+
+## Step 2: Identified Bottlenecks
+- Missing indexes on `Bookings.user_id`, `Bookings.property_id`, and `Bookings.start_date`.  
+- Queries filtered by `start_date` were scanning the entire table.  
+
+## Step 3: Schema Adjustments
+
+### Indexing
 ```sql
-EXPLAIN (ANALYZE, BUFFERS)
-SELECT * FROM orders WHERE customer_id = 123;
+CREATE INDEX idx_bookings_userid ON Bookings(user_id);
+CREATE INDEX idx_bookings_propertyid ON Bookings(property_id);
+CREATE INDEX idx_bookings_startdate ON Bookings(start_date);
 ```
 
-## Step 2: Identify Bottlenecks  
-Check for:  
-- **Full table scans** on large tables  
-- **High execution time** (ms/seconds)  
-- **Rows examined vs. rows returned** mismatch  
-- **Costly joins, sorting, or temporary tables**  
-
-Example (Postgres):  
-```
-Seq Scan on orders  (cost=0.00..154.00 rows=2000 width=...)
-Filter: (customer_id = 123)
-```
-🚨 Indicates a **sequential scan** due to a missing index.  
-
-## Step 3: Suggested Improvements  
-- Add indexes on frequently queried columns  
-  ```sql
-  CREATE INDEX idx_orders_customer_id ON orders(customer_id);
-  ```
-- Rewrite inefficient queries (avoid `SELECT *`, use explicit columns)  
-- Use **covering indexes** for queries that filter + return specific columns  
-- Consider **schema adjustments**:  
-  - Normalize to reduce redundant writes  
-  - Denormalize to reduce heavy joins  
-
-## Step 4: Implement & Compare  
-
-### Before Index
-```
-Execution Time: 120 ms
-Rows Examined: 50,000
+### Partitioning (by year of start_date)
+```sql
+ALTER TABLE Bookings
+PARTITION BY RANGE (YEAR(start_date)) (
+    PARTITION p2024 VALUES LESS THAN (2025),
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p_future VALUES LESS THAN MAXVALUE
+);
 ```
 
-### After Index
+## Step 4: Post-Optimization Monitoring
+
+```sql
+EXPLAIN ANALYZE
+SELECT 
+    b.booking_id,
+    b.start_date,
+    b.end_date,
+    u.first_name,
+    u.last_name,
+    p.name AS property_name
+FROM Bookings b
+JOIN Users u ON b.user_id = u.user_id
+JOIN Properties p ON b.property_id = p.property_id
+WHERE b.start_date BETWEEN '2025-09-01' AND '2025-09-30';
 ```
-Execution Time: 5 ms
-Rows Examined: 5
-```
 
-✅ Improvement: **~24x faster**  
+### Results
+- Query now uses **index lookups** and scans only the relevant partition (`p2025`).  
+- Rows examined reduced significantly.  
+- Execution time improved from full scan to fast index-based retrieval.
 
-## Step 5: Continuous Monitoring  
-- Run `EXPLAIN (ANALYZE)` on top queries weekly  
-- Track query execution times in logs  
-- Add monitoring dashboards (e.g., **pgAdmin, MySQL Workbench, Grafana + Prometheus**)  
-- Revisit schema design when datasets grow significantly  
+## Conclusion
+By **monitoring queries** with `EXPLAIN ANALYZE`, we identified bottlenecks and applied:
+- **Indexes** on join/filter columns.  
+- **Partitioning** on `start_date`.  
 
-## Summary Report Example  
-| Query | Issue | Fix | Before | After |  
-|-------|-------|-----|--------|-------|  
-| `SELECT * FROM orders WHERE customer_id = 123;` | Sequential scan | Added index on `customer_id` | 120 ms | 5 ms |  
+This led to faster queries and a more scalable schema.  
