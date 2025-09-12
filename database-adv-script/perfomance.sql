@@ -19,7 +19,7 @@ FROM Bookings b
 INNER JOIN Users u ON b.user_id = u.user_id
 INNER JOIN Properties p ON b.property_id = p.property_id
 LEFT JOIN Payments pay ON b.booking_id = pay.booking_id
-WHERE b.start_date IS NOT NULL;
+WHERE b.start_date IS NOT NULL AND pay.status = 'completed';
 
 -- Analyse the querie's efficiency
 
@@ -43,7 +43,7 @@ FROM Bookings b
 INNER JOIN Users u ON b.user_id = u.user_id
 INNER JOIN Properties p ON b.property_id = p.property_id
 LEFT JOIN Payments pay ON b.booking_id = pay.booking_id
-WHERE b.start_date IS NOT NULL;
+WHERE b.start_date IS NOT NULL AND pay.status = 'completed';
 
 -- Refactor the query to reduce execution time
 
@@ -72,5 +72,5 @@ FROM Bookings b
 JOIN Users u ON b.user_id = u.user_id
 JOIN Properties p ON b.property_id = p.property_id
 LEFT JOIN Payments pay ON b.booking_id = pay.booking_id
-WHERE b.start_date IS NOT NULL;
+WHERE b.start_date IS NOT NULL AND pay.status = 'completed';
 
